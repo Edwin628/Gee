@@ -1,8 +1,12 @@
 package gee
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type router struct {
+	nodes   map[string]*node
 	handles map[string]HandlerFunc
 }
 
@@ -12,7 +16,24 @@ func newRouter() *router {
 	}
 }
 
+func (r *router) parsePattern(pattern string) []string {
+	tokens := strings.Split(pattern, "/")
+	var parts []string
+	for _, token := range tokens {
+		if token != "" {
+			parts = append(parts, token)
+			// tbh can we delete this one
+			if token[0] == '*' {
+				break
+			}
+		}
+	}
+	return parts
+}
+
 func (r *router) addRoute(method string, pattern string, handler HandlerFunc) {
+	parts := r.parsePattern(pattern)
+	r.nodes[method].insert(parts)
 	// know the conncept of method&pattern here
 	key := method + "-" + pattern
 	r.handles[key] = handler
