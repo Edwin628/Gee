@@ -5,6 +5,7 @@ import (
 )
 
 type HandlerFunc func(c *Context)
+type DataStruct map[string]interface{}
 
 type Engine struct {
 	router *router
