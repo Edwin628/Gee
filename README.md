@@ -1,1 +1,3 @@
-# Gee
+# SimGin
+
+a Simplified Version of Gin

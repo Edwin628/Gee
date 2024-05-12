@@ -1,38 +1,55 @@
 package gee
 
 type node struct {
-	pattern string
-	next    map[string]*node
-	isEnd   bool
+	pattern  string
+	part     string
+	children []*node
+	isWild   bool
 }
 
-func NewNode() *node {
+func NewNode(str string, wild bool) *node {
 	return &node{
 		pattern: "",
-		next:    make(map[string]*node),
-		isEnd:   false,
+		part:    str,
+		isWild:  wild,
 	}
 }
 
-func (n *node) insert(strs []string) {
-	cur := n
-	for _, str := range strs {
-		if cur.next[str] == nil {
-			cur.next[str] = NewNode()
+func (n *node) findChild(part string) *node {
+	for _, node := range n.children {
+		if node.part == part || node.isWild {
+			return node
 		}
-		cur = cur.next[str]
 	}
-	cur.isEnd = true
+	return nil
 }
 
-func (n *node) search(strs []string) bool {
-	cur := n
-	for _, str := range strs {
-		if cur.next[str] != nil {
-			cur = cur.next[str]
-		} else {
-			return false
-		}
+func (n *node) insert(pattern string, parts []string, height int) {
+	if height == len(parts) {
+		n.pattern = pattern
+		return
 	}
-	return cur.isEnd
+	part := parts[height]
+
+	child := n.findChild(part)
+	if child == nil {
+		child = NewNode(part, part[0] == ':' || part[0] == '*')
+		n.children = append(n.children, child)
+	}
+	child.insert(pattern, parts, height+1)
+}
+
+func (n *node) search(parts []string, height int) *node {
+	if height == len(parts) {
+		return n
+	}
+
+	part := parts[height]
+	child := n.findChild(part)
+
+	if child == nil {
+		return nil
+	}
+
+	return child.search(parts, height+1)
 }
