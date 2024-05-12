@@ -16,13 +16,13 @@ func newRouter() *router {
 	}
 }
 
-func (r *router) parsePattern(pattern string) []string {
+func parsePattern(pattern string) []string {
 	tokens := strings.Split(pattern, "/")
 	var parts []string
 	for _, token := range tokens {
 		if token != "" {
 			parts = append(parts, token)
-			// TBD can we delete this one
+			// accept the first *
 			if token[0] == '*' {
 				break
 			}
@@ -32,7 +32,7 @@ func (r *router) parsePattern(pattern string) []string {
 }
 
 func (r *router) addRoute(method string, pattern string, handler HandlerFunc) {
-	parts := r.parsePattern(pattern)
+	parts := parsePattern(pattern)
 	r.nodes[method].insert(pattern, parts, 0)
 	// know the conncept of method&pattern here
 	key := method + "-" + pattern
@@ -40,7 +40,7 @@ func (r *router) addRoute(method string, pattern string, handler HandlerFunc) {
 }
 
 func (r *router) getRoute(method string, path string) (*node, map[string]string) {
-	pathParts := r.parsePattern(path)
+	pathParts := parsePattern(path)
 	n, ok := r.nodes[method]
 	if !ok {
 		return nil, nil
@@ -53,7 +53,7 @@ func (r *router) getRoute(method string, path string) (*node, map[string]string)
 	params := make(map[string]string)
 
 	// to assign the pattern value to params
-	patternParts := r.parsePattern(res.pattern)
+	patternParts := parsePattern(res.pattern)
 	for index, part := range patternParts {
 		if part[0] == ':' {
 			params[part[1:]] = pathParts[index]
