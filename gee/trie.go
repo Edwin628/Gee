@@ -1,5 +1,7 @@
 package gee
 
+import "strings"
+
 type node struct {
 	pattern  string
 	part     string
@@ -24,7 +26,19 @@ func (n *node) findChild(part string) *node {
 	return nil
 }
 
+func (n *node) findChilden(part string) []*node {
+	var res []*node
+	for _, node := range n.children {
+		if node.part == part || node.isWild {
+			res = append(res, node)
+		}
+	}
+	return res
+}
+
 func (n *node) insert(pattern string, parts []string, height int) {
+	// this condition is important
+	// /p/:lang/doc, set the node "doc" pattern
 	if height == len(parts) {
 		n.pattern = pattern
 		return
@@ -40,16 +54,24 @@ func (n *node) insert(pattern string, parts []string, height int) {
 }
 
 func (n *node) search(parts []string, height int) *node {
-	if height == len(parts) {
-		return n
-	}
-
-	part := parts[height]
-	child := n.findChild(part)
-
-	if child == nil {
+	// use strings.HasPrefix(n.part, "*") instead of n.part[0](index 0 of length 0)
+	if height == len(parts) || strings.HasPrefix(n.part, "*") {
+		if n.pattern != "" {
+			return n
+		}
 		return nil
 	}
 
-	return child.search(parts, height+1)
+	part := parts[height]
+	children := n.findChilden(part)
+
+	for _, child := range children {
+		res := child.search(parts, height+1)
+		if res != nil {
+			return res
+		}
+
+	}
+
+	return nil
 }

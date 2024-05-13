@@ -12,13 +12,23 @@ type router struct {
 
 func newRouter() *router {
 	return &router{
+		nodes:   make(map[string]*node),
 		handles: make(map[string]HandlerFunc),
 	}
 }
 
 func parsePattern(pattern string) []string {
 	tokens := strings.Split(pattern, "/")
-	var parts []string
+
+	// if we write var parts []string, it will cause errors in the case:/
+
+	// case 1
+	// var parts []string
+	// result := reflect.DeepEqual(parsePattern("/"), []string(nil))
+
+	// case 2
+	parts := make([]string, 0)
+	// result := reflect.DeepEqual(parsePattern("/"), []string{})
 	for _, token := range tokens {
 		if token != "" {
 			parts = append(parts, token)
@@ -33,6 +43,11 @@ func parsePattern(pattern string) []string {
 
 func (r *router) addRoute(method string, pattern string, handler HandlerFunc) {
 	parts := parsePattern(pattern)
+
+	_, ok := r.nodes[method]
+	if !ok {
+		r.nodes[method] = NewNode("", false)
+	}
 	r.nodes[method].insert(pattern, parts, 0)
 	// know the conncept of method&pattern here
 	key := method + "-" + pattern
@@ -60,12 +75,12 @@ func (r *router) getRoute(method string, path string) (*node, map[string]string)
 		}
 		// TBD if only * exists, what should we do?
 		if part[0] == '*' && len(part) > 1 {
-			params[part[1:]] = pathParts[index]
+			params[part[1:]] = strings.Join(pathParts[index:], "/")
 			break
 		}
 	}
 
-	return n, params
+	return res, params
 
 }
 

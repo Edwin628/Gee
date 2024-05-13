@@ -16,7 +16,12 @@ func newTestRouter() *router {
 }
 
 func TestParsePattern(t *testing.T) {
-	result := reflect.DeepEqual(parsePattern("/p/:name"), []string{"p", ":name"})
+	result := reflect.DeepEqual(parsePattern("/"), []string{})
+	if !result {
+		t.Errorf("Failed case: /")
+	}
+
+	result = reflect.DeepEqual(parsePattern("/p/:name"), []string{"p", ":name"})
 	result = result && reflect.DeepEqual(parsePattern("/p/*"), []string{"p", "*"})
 	result = result && reflect.DeepEqual(parsePattern("/p/*name/*"), []string{"p", "*name"})
 
@@ -26,18 +31,37 @@ func TestParsePattern(t *testing.T) {
 }
 
 func TestGetRoute(t *testing.T) {
+	tests := []struct {
+		name      string
+		path      string
+		pattern   string
+		paramName string
+		param     string
+	}{
+		{"test :var", "/hello/aibin", "/hello/:name", "name", "aibin"},
+		{"test path", "/hello/b/c", "/hello/b/c", "", ""},
+		{"test *var", "/assets/aibin", "/assets/*filepath", "filepath", "aibin"},
+		{"test *var", "/assets/aibin/x", "/assets/*filepath", "filepath", "aibin/x"},
+	}
 	r := newTestRouter()
-	n, params := r.getRoute("GET", "/hello/aibin")
 
-	if n == nil {
-		t.Errorf("node nil happened")
+	for _, tt := range tests {
+		// sequence one by one
+		t.Run(tt.name, func(t *testing.T) {
+			n, params := r.getRoute("GET", tt.path)
+			if n == nil {
+				t.Errorf("node nil happened")
+			}
+
+			if !reflect.DeepEqual(n.pattern, tt.pattern) {
+				t.Errorf("parsePattern(%q) got %v, want %v", tt.pattern, n.pattern, tt.pattern)
+			}
+			if tt.paramName != "" {
+				if !reflect.DeepEqual(params[tt.paramName], tt.param) {
+					t.Errorf("Params name not matched")
+				}
+			}
+		})
 	}
 
-	if n.pattern != "/hello/:name" {
-		t.Errorf("node pattern not mattched")
-	}
-
-	if !(params["name"] == "aibin") {
-		t.Errorf("Params name not matched")
-	}
 }
