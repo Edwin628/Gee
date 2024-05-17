@@ -1,3 +1,8 @@
-# SimGin
+# Gee
 
-a Simplified Version of Gin
+Gee - a Simplified Version of Gin
+
+- HTTP Base
+- Context & Router
+- Dynamic Route & Trie
+- Route Group Control
