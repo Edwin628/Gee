@@ -88,6 +88,7 @@ func (r *router) handle(c *Context) {
 	n, params := r.getRoute(c.Method, c.Path)
 	if n == nil {
 		fmt.Fprintf(c.Writer, "404 Not Found, Path Nil")
+		return
 	}
 	c.Params = params
 	key := c.Method + "-" + n.pattern
