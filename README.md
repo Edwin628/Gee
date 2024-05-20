@@ -6,3 +6,4 @@ Gee - a Simplified Version of Gin
 - Context & Router
 - Dynamic Route & Trie
 - Route Group Control
+- Middlewares

@@ -1,13 +1,32 @@
 package main
 
 import (
+	"log"
 	"net/http"
+	"time"
 
 	"gee"
 )
 
+func Logger() gee.HandlerFunc {
+	return func(c *gee.Context) {
+		// Start timer
+		t := time.Now()
+		// Process request
+		c.Next()
+		// Calculate resolution time
+		log.Printf("[%d] %s in %v", c.StatusCode, c.Request.RequestURI, time.Since(t))
+	}
+}
+
 func main() {
 	r := gee.New()
+	r.Use(Logger())
+
+	r.GET("/", func(c *gee.Context) {
+		c.HTML(http.StatusOK, "<h1>Hello Gee</h1>")
+	})
+
 	r.GET("/index", func(c *gee.Context) {
 		c.HTML(http.StatusOK, "<h1>index page</h1>")
 	})
@@ -54,6 +73,17 @@ func main() {
 			"password": c.Request.FormValue("password"),
 		})
 	})
+
+	// middleware feature
+	middlewareV2 := func(c *gee.Context) {
+		// Start timer
+		t := time.Now()
+		// if a server error occurred
+		// c.String(500, "Internal Server Error\n")
+		// Calculate resolution time
+		log.Printf("[%d] %s in %v for group v2", c.StatusCode, c.Request.RequestURI, time.Since(t))
+	}
+	v2.Use(middlewareV2)
 
 	r.Run(":9999")
 }

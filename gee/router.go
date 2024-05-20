@@ -95,6 +95,9 @@ func (r *router) handle(c *Context) {
 	if handle, ok := r.handles[key]; !ok {
 		fmt.Fprintf(c.Writer, "404 Not Found, Pattern Nil")
 	} else {
-		handle(c)
+		c.Handles = append(c.Handles, handle)
+		//handle(c)
 	}
+
+	c.Next()
 }
