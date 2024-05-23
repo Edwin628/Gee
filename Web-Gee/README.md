@@ -1,4 +1,4 @@
-# Gee
+# Web Framework
 
 WebGee - a Simplified Version of Gin
 
@@ -8,5 +8,3 @@ WebGee - a Simplified Version of Gin
 - Route Group Control
 - Middlewares
 - Static Resource & Http Template Render
-
-GeeCache
