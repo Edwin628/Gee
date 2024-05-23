@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"text/template"
 	"time"
 
 	"gee"
@@ -19,16 +21,50 @@ func Logger() gee.HandlerFunc {
 	}
 }
 
+func FormatAsDate(t time.Time) string {
+	year, month, day := t.Date()
+	return fmt.Sprintf("%d-%02d-%02d", year, month, day)
+}
+
+type student struct {
+	Name string
+	Age  int8
+}
+
 func main() {
 	r := gee.New()
+
+	r.SetFuncMap(template.FuncMap{
+		"FormatAsDate": FormatAsDate,
+	})
+	r.LoadHTMLGlob("templates/*")
+	r.Static("/assets", "./static")
+
 	r.Use(Logger())
 
 	r.GET("/", func(c *gee.Context) {
-		c.HTML(http.StatusOK, "<h1>Hello Gee</h1>")
+		c.HTML(http.StatusOK, "css", nil)
+	})
+
+	stu1 := &student{Name: "aibin", Age: 24}
+	stu2 := &student{Name: "Jack", Age: 22}
+
+	r.GET("/students", func(c *gee.Context) {
+		c.HTML(http.StatusOK, "arr", gee.DataStruct{
+			"title":  "gee",
+			"stuArr": [2]*student{stu1, stu2},
+		})
+	})
+
+	r.GET("/date", func(c *gee.Context) {
+		c.HTML(http.StatusOK, "custom_func", gee.DataStruct{
+			"title": "gee",
+			"now":   time.Date(2024, 5, 20, 0, 0, 0, 0, time.UTC),
+		})
 	})
 
 	r.GET("/index", func(c *gee.Context) {
-		c.HTML(http.StatusOK, "<h1>index page</h1>")
+		c.HTML(http.StatusOK, "css", nil)
 	})
 
 	// curl "http://localhost:9999/hello?name=geektutu"
@@ -40,11 +76,13 @@ func main() {
 		c.String(http.StatusOK, "hello %s, you are at %s\n", c.Params["name"], c.Path)
 	})
 
+	/* duplicate key in router will cause error
 	r.GET("/assets/*filepath", func(c *gee.Context) {
 		c.JSON(gee.DataStruct{
 			"filepath": c.Params["filepath"],
 		})
 	})
+	*/
 
 	// curl "http://localhost:9999/login" -X POST -d 'username=geektutu&password=1234'
 	r.POST("/login", func(c *gee.Context) {
@@ -57,7 +95,7 @@ func main() {
 	// test group feature
 	v1 := r.Group("/v1")
 	v1.GET("/", func(c *gee.Context) {
-		c.HTML(http.StatusOK, "<h1>v1 page</h1>")
+		c.HTML(http.StatusOK, "css.tmpl", nil)
 	})
 	v1.GET("/hello", func(c *gee.Context) {
 		c.String(http.StatusOK, "hello %s, you are at %s\n", c.Request.URL.Query().Get("name"), c.Path)

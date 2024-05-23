@@ -7,3 +7,4 @@ Gee - a Simplified Version of Gin
 - Dynamic Route & Trie
 - Route Group Control
 - Middlewares
+- Static Resource & Http Template Render
