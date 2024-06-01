@@ -1,11 +1,11 @@
-package geeorm
+package test
 
 import (
 	"database/sql"
 	"log"
 )
 
-func main() {
+func main_default() {
 	db, _ := sql.Open("sqlite3", "gee.db")
 	defer func() { _ = db.Close() }()
 	_, _ = db.Exec("DROP TABLE IF EXISTS User;")
