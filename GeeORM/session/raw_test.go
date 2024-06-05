@@ -3,6 +3,7 @@ package session
 import (
 	"database/sql"
 	"fmt"
+	"geeorm/dialect"
 	"os"
 	"testing"
 
@@ -10,6 +11,12 @@ import (
 )
 
 var testDB *sql.DB
+var TestDial, _ = dialect.GetDialect("sqlite3")
+
+type User struct {
+	Name string `geeorm:"PRIMARY KEY"`
+	Age  int
+}
 
 func TestMain(m *testing.M) {
 	var err error
@@ -33,7 +40,11 @@ func TestSessionExec(t *testing.T) {
 	if testDB == nil {
 		t.Fatal("Database connection is nil")
 	}
-	session := New(testDB)
+	dialect, ok := dialect.GetDialect("sqlite3")
+	if !ok {
+		t.Fatal("get dialect failed")
+	}
+	session := New(testDB, dialect)
 	session.Raw("DROP TABLE IF EXISTS User;").Exec()
 	session.Raw("CREATE TABLE User(Name text);").Exec()
 	result, _ := session.Raw("INSERT INTO User(`Name`) values (?), (?)", "Tom", "Sam").Exec()
@@ -44,7 +55,11 @@ func TestSessionExec(t *testing.T) {
 }
 
 func TestQueryRows(t *testing.T) {
-	session := New(testDB)
+	dialect, ok := dialect.GetDialect("sqlite3")
+	if !ok {
+		t.Fatal("get dialect failed")
+	}
+	session := New(testDB, dialect)
 	session.Raw("DROP TABLE IF EXISTS User;").Exec()
 	session.Raw("CREATE TABLE User(Name text);").Exec()
 	session.Raw("INSERT INTO User(`Name`) values (?), (?)", "Tom", "Sam").Exec()
@@ -60,5 +75,25 @@ func TestQueryRows(t *testing.T) {
 	}
 	if len(names) != 2 {
 		t.Error("Query rows wrong: ", len(names))
+	}
+}
+
+func TestTable(t *testing.T) {
+	session := New(testDB, TestDial)
+	session.Model(&User{})
+	session.DropTable()
+	//session.CreateTable()
+	if !session.HasTable() {
+		t.Fatal("Failed to create table User")
+	}
+}
+
+func TestSession_Model(t *testing.T) {
+	session := New(testDB, TestDial)
+	session.Model(&User{})
+	session.DropTable()
+	session.CreateTable()
+	if !(session.RefTable().FieldNames[0] == "Name") || !(session.RefTable().FieldNames[1] == "Age") {
+		t.Fatal("session table name not fit")
 	}
 }
